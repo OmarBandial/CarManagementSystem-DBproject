@@ -81,9 +81,5 @@ CarManagementDBProject/
 - Passwords are stored in plain text for demo purposes. **Do not use in production!**
 - Change `app.secret_key` in `app.py` before deploying.
 
-## License
-[MIT](LICENSE) (or specify your own)
-
----
 
 **Made with Flask & SQLite** 
