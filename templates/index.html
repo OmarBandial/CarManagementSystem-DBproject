@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Car Dealership - Home{% endblock %}
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1>Find Your Perfect Car at Car Empire</h1>
+        <p class="hero-subheadline">Browse our extensive inventory of quality vehicles and drive away with confidence.</p>
+        <div class="quick-actions">
+            <a href="{{ url_for('cars') }}" class="btn btn-primary">Browse Inventory</a>
+        </div>
+        <div style="margin: 2.5em auto 0 auto; max-width: 600px;">
+            <img src="{{ url_for('static', filename='car_images/featured_car.png') }}" alt="Featured Car" style="width:100%;max-width:500px;border-radius:18px;box-shadow:0 4px 24px rgba(44,82,130,0.10);" onerror="this.style.display='none'">
+        </div>
+    </div>
+</div>
+
+<div class="featured-section">
+    <h2 style="text-align:center;">Featured Vehicles</h2>
+    <div class="car-grid">
+        {% for car in cars %}
+        <div class="car-card">
+            <img src="{{ url_for('static', filename='car_images/' + (car.image if car.image else 'placeholder.png')) }}" alt="{{ car.brand }} {{ car.model }}" style="width:100%;height:180px;object-fit:cover;border-radius:12px 12px 0 0;margin-bottom:1em;background:#f7f7f7;">
+            <h3>{{ car.brand }} {{ car.model }}</h3>
+            <div style="color:#888;font-size:0.97em;margin-bottom:0.5em;">{{ car.year }}{% if car.color %} &bull; {{ car.color }}{% endif %}</div>
+            <div class="features-list">
+                {% if car.features %}
+                    {% for feature in car.features.split(',') %}
+                        <span class="feature-tag">{{ feature.strip() }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="price">${{ '%.0f'|format(car.price) }}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5em;">
+                <span class="stock-badge {% if car.stock <= 3 %}low-stock{% endif %}">{{ car.stock }} in stock</span>
+                <a href="{{ url_for('car_details', car_id=car.id) }}" class="btn btn-info" style="min-width:120px;">View Details</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="text-align:center;margin-top:2.5em;">
+        <a href="{{ url_for('cars') }}" class="btn btn-secondary" style="font-size:1.1em;padding:12px 32px;">View All Vehicles</a>
+    </div>
+</div>
+{% endblock %} 

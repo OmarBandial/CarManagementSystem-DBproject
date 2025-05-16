@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}{{ car.brand }} {{ car.model }} Details{% endblock %}
+{% block content %}
+<div class="car-details-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="car-details-card">
+        <img src="{{ url_for('static', filename='car_images/' + (car.image if car.image else 'placeholder.png')) }}" alt="{{ car.brand }} {{ car.model }}" style="width:100%;max-width:420px;height:220px;object-fit:cover;border-radius:12px 12px 0 0;display:block;margin:0 auto 1.5em auto;background:#f7f7f7;">
+        <div class="car-card-content">
+            <div class="car-header">
+                <h2>{{ car.brand }} {{ car.model }}</h2>
+            </div>
+            <div style="color:#888;font-size:1.05em;margin-bottom:0.7em;">{{ car.year }}{% if car.color %} &bull; {{ car.color }}{% endif %}</div>
+            <div class="features-list" style="margin-bottom:1em;">
+                {% if car.features %}
+                    {% for feature in car.features.split(',') %}
+                        <span class="feature-tag">{{ feature.strip() }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span class="label">Price:</span>
+                    <span class="value price">${{ '%.2f'|format(car.price) }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Stock:</span>
+                    <span class="value">{{ car.stock }} units</span>
+                </div>
+                {% if car.year %}
+                <div class="detail-item">
+                    <span class="label">Year:</span>
+                    <span class="value">{{ car.year }}</span>
+                </div>
+                {% endif %}
+                {% if car.color %}
+                <div class="detail-item">
+                    <span class="label">Color:</span>
+                    <span class="value">{{ car.color }}</span>
+                </div>
+                {% endif %}
+                {% if car.mileage %}
+                <div class="detail-item">
+                    <span class="label">Mileage:</span>
+                    <span class="value">{{ car.mileage }} miles</span>
+                </div>
+                {% endif %}
+            </div>
+            {% if car.description %}
+            <div class="car-description">
+                <h3>Description</h3>
+                <p>{{ car.description }}</p>
+            </div>
+            {% endif %}
+            <div class="purchase-section">
+                {% if session.user_id %}
+                    {% if car.stock > 0 %}
+                    <button id="purchaseBtn"
+                        data-car-id="{{ car.id }}"
+                        data-car-brand="{{ car.brand }}"
+                        data-car-model="{{ car.model }}"
+                        data-car-price="{{ car.price }}"
+                        class="btn btn-primary">
+                        Purchase Now
+                    </button>
+                    {% else %}
+                    <button disabled class="btn btn-secondary">Out of Stock</button>
+                    {% endif %}
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-secondary">Login to Purchase</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Purchase Confirmation Modal -->
+<div id="purchaseModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirm Purchase</h3>
+        <p>Are you sure you want to purchase:</p>
+        <p id="carInfo"></p>
+        <p>Price: $<span id="carPrice"></span></p>
+        <div class="modal-actions">
+            <form id="purchaseForm" method="post" action="">
+                <button type="submit" class="btn btn-success">Confirm Purchase</button>
+            </form>
+            <button onclick="closePurchaseModal()" class="btn btn-danger">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    var purchaseBtn = document.getElementById('purchaseBtn');
+    if (purchaseBtn) {
+        purchaseBtn.addEventListener('click', function() {
+            var carId = this.getAttribute('data-car-id');
+            var brand = this.getAttribute('data-car-brand');
+            var model = this.getAttribute('data-car-model');
+            var price = parseFloat(this.getAttribute('data-car-price'));
+            showPurchaseConfirmation(carId, brand, model, price);
+        });
+    }
+    function showPurchaseConfirmation(carId, brand, model, price) {
+        document.getElementById('carInfo').textContent = brand + ' ' + model;
+        document.getElementById('carPrice').textContent = price.toFixed(2);
+        document.getElementById('purchaseForm').action = '/buy/' + carId;
+        document.getElementById('purchaseModal').style.display = 'block';
+    }
+
+    function closePurchaseModal() {
+        document.getElementById('purchaseModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        var modal = document.getElementById('purchaseModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %} 

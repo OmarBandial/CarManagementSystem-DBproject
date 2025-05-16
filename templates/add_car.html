@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Add New Car{% endblock %}
+{% block content %}
+    <h2>Add New Car</h2>
+    <form method="post">
+        <label>Brand: <input type="text" name="brand" required></label><br>
+        <label>Model: <input type="text" name="model" required></label><br>
+        <label>Price: <input type="number" name="price" step="0.01" required></label><br>
+        <label>Cost Price: <input type="number" name="cost_price" step="0.01" required></label><br>
+        <label>Stock: <input type="number" name="stock" required></label><br>
+        <button type="submit">Add Car</button>
+    </form>
+    <br>
+    <a href="{{ url_for('cars') }}">Back to Car List</a>
+{% endblock %} 

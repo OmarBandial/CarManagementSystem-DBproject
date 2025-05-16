@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Car Dealership{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="{{ url_for('index') }}" class="navbar-brand">Car Empire</a>
+            <a href="{{ url_for('index') }}" class="navbar-link">Home</a>
+            <a href="{{ url_for('cars') }}" class="navbar-link">Browse Cars</a>
+        </div>
+        <div class="navbar-right">
+            {% if session.user_id %}
+                <a href="{{ url_for('purchase_history') }}" class="navbar-link">Purchase History</a>
+                {% if session.is_admin %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="navbar-link">Dashboard</a>
+                    <a href="{{ url_for('add_car') }}" class="navbar-link">Add Car</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="navbar-btn btn-secondary">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="navbar-btn btn-outline">Login</a>
+                <a href="{{ url_for('register') }}" class="navbar-btn btn-primary">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+    {% block content %}{% endblock %}
+</body>
+</html> 

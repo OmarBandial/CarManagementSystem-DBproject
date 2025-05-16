@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+{% block title %}Admin Analytics{% endblock %}
+{% block content %}
+<div style="display: flex; flex-direction: column; align-items: center; margin-top: 24px; margin-bottom: 16px;">
+    <h2 style="margin-bottom: 12px;">Admin Analytics Dashboard</h2>
+</div>
+<div class="dashboard-analytics">
+  <!-- 1. Total Sales Overview -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>1. Total Sales Overview</h3>
+      <div class="tab-buttons" style="margin-bottom: 1em;">
+        <button type="button" class="tab-btn active" data-tab="daily">Daily</button>
+        <button type="button" class="tab-btn" data-tab="monthly">Monthly</button>
+        <button type="button" class="tab-btn" data-tab="yearly">Yearly</button>
+      </div>
+      <div id="sales-table-daily" class="sales-table-section">
+        <table class="paginated-table"><tr><th>Date</th><th>Sales</th><th>Revenue</th></tr>
+        {% for row in sales_daily %}<tr><td>{{ row.period }}</td><td>{{ row.count }}</td><td>${{ '%.2f'|format(row.revenue or 0) }}</td></tr>{% endfor %}
+        </table>
+        <div class="pagination-controls"></div>
+      </div>
+      <div id="sales-table-monthly" class="sales-table-section" style="display:none;">
+        <table class="paginated-table"><tr><th>Month</th><th>Sales</th><th>Revenue</th></tr>
+        {% for row in sales_monthly %}<tr><td>{{ row.period }}</td><td>{{ row.count }}</td><td>${{ '%.2f'|format(row.revenue or 0) }}</td></tr>{% endfor %}
+        </table>
+        <div class="pagination-controls"></div>
+      </div>
+      <div id="sales-table-yearly" class="sales-table-section" style="display:none;">
+        <table class="paginated-table"><tr><th>Year</th><th>Sales</th><th>Revenue</th></tr>
+        {% for row in sales_yearly %}<tr><td>{{ row.period }}</td><td>{{ row.count }}</td><td>${{ '%.2f'|format(row.revenue or 0) }}</td></tr>{% endfor %}
+        </table>
+        <div class="pagination-controls"></div>
+      </div>
+    </div>
+    <div class="dashboard-card">
+      <h4 id="sales-chart-title">Daily Sales/Revenue Chart</h4>
+      <canvas id="dailySalesChart" width="600" height="300"></canvas>
+      <canvas id="monthlySalesChart" width="600" height="300" style="display:none;"></canvas>
+      <canvas id="yearlySalesChart" width="600" height="300" style="display:none;"></canvas>
+    </div>
+  </div>
+  <!-- 2. Sales by Car Brand and Model -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>2. Sales by Car Brand and Model</h3>
+      <table class="paginated-table"><tr><th>Brand</th><th>Model</th><th>Sales</th><th>Revenue</th></tr>
+      {% for row in sales_by_brand %}<tr><td>{{ row.brand }}</td><td>{{ row.model }}</td><td>{{ row.num_sales }}</td><td>${{ '%.2f'|format(row.total_revenue or 0) }}</td></tr>{% endfor %}
+      </table>
+      <div class="pagination-controls"></div>
+    </div>
+    <div class="dashboard-card">
+      <h4>Sales by Brand Bar Chart</h4>
+      <canvas id="brandSalesChart" width="600" height="300"></canvas>
+    </div>
+  </div>
+  <!-- 3. Best Selling Cars -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>3. Best Selling Cars</h3>
+      <ol>{% for car in best_selling %}<li>{{ car.brand }} {{ car.model }} ({{ car.num_sales }} sales)</li>{% endfor %}</ol>
+    </div>
+  </div>
+  <!-- 4. Customer Information -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>4. Customer Information</h3>
+      <table class="paginated-table"><tr><th>ID</th><th>Username</th><th>Age</th><th>Location</th><th>Purchases</th></tr>
+      {% for c in customers %}<tr><td>{{ c.id }}</td><td>{{ c.username }}</td><td>{{ c.age }}</td><td>{{ c.region }}</td><td>{{ c.purchases }}</td></tr>{% endfor %}
+      </table>
+      <div class="pagination-controls"></div>
+    </div>
+  </div>
+  <!-- 5. Sales by Region -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>5. Sales by Region</h3>
+      <table class="paginated-table"><tr><th>Region</th><th>Sales</th><th>Revenue</th></tr>
+      {% for row in sales_by_region %}<tr><td>{{ row.region }}</td><td>{{ row.num_sales }}</td><td>${{ '%.2f'|format(row.revenue or 0) }}</td></tr>{% endfor %}
+      </table>
+      <div class="pagination-controls"></div>
+    </div>
+    <div class="dashboard-card">
+      <h4>Sales by Region (Pie Chart)</h4>
+      <canvas id="regionPieChart" width="350" height="350"></canvas>
+    </div>
+  </div>
+  <!-- 6. Monthly Sales Trend -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>6. Monthly Sales Trend</h3>
+      <table class="paginated-table"><tr><th>Month</th><th>Sales</th><th>Revenue</th></tr>
+      {% for row in monthly_trend %}<tr><td>{{ row.month }}</td><td>{{ row.count }}</td><td>${{ '%.2f'|format(row.revenue or 0) }}</td></tr>{% endfor %}
+      </table>
+      <div class="pagination-controls"></div>
+      <p><b>Forecast (next month, avg of last 3):</b> {{ forecast or 'N/A' }} sales</p>
+    </div>
+  </div>
+  <!-- 7. Repeat vs New Customers -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>7. Repeat vs New Customers</h3>
+      <p>New Customers: {{ repeat_vs_new.new_customers or 0 }}</p>
+      <p>Repeat Customers: {{ repeat_vs_new.repeat_customers or 0 }}</p>
+    </div>
+  </div>
+  <!-- 8. Low Stock Cars -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>8. Low Stock Cars (less than 3 left)</h3>
+      <table class="paginated-table"><tr><th>Brand</th><th>Model</th><th>Stock</th></tr>
+      {% for car in low_stock %}<tr><td>{{ car.brand }}</td><td>{{ car.model }}</td><td>{{ car.stock }}</td></tr>{% endfor %}
+      </table>
+      <div class="pagination-controls"></div>
+    </div>
+  </div>
+  <!-- 9. Profit Analysis -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>9. Profit Analysis</h3>
+      <table class="paginated-table"><tr><th>Sale ID</th><th>Brand</th><th>Model</th><th>Sale Price</th><th>Cost Price</th><th>Profit</th></tr>
+      {% for row in profit_analysis %}<tr><td>{{ row.id }}</td><td>{{ row.brand }}</td><td>{{ row.model }}</td><td>${{ '%.2f'|format(row.sale_price) }}</td><td>${{ '%.2f'|format(row.cost_price) }}</td><td>${{ '%.2f'|format(row.profit) }}</td></tr>{% endfor %}
+      </table>
+      <div class="pagination-controls"></div>
+    </div>
+    <div class="dashboard-card">
+      <h4>Profit by Brand (Bar Chart)</h4>
+      <canvas id="profitBarChart" width="400" height="350"></canvas>
+    </div>
+  </div>
+  <!-- 10. Customer Categories -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>10. Customer Categories (by total spent)</h3>
+      <table class="paginated-table"><tr><th>ID</th><th>Username</th><th>Total Spent</th></tr>
+      {% for c in customer_categories %}<tr><td>{{ c.id }}</td><td>{{ c.username }}</td><td>${{ '%.2f'|format(c.total_spent or 0) }}</td></tr>{% endfor %}
+      </table>
+      <div class="pagination-controls"></div>
+    </div>
+  </div>
+  <!-- 11. Discount and Promotion Impact -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>11. Discount and Promotion Impact</h3>
+      <p>Discounted Sales: {{ discount_impact.discounted_sales or 0 }}</p>
+      <p>Regular Sales: {{ discount_impact.regular_sales or 0 }}</p>
+    </div>
+  </div>
+  <!-- 12. Seasonal Sales Analysis -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>12. Seasonal Sales Analysis</h3>
+      <table class="paginated-table"><tr><th>Month</th><th>Sales</th><th>Revenue</th></tr>
+      {% for row in seasonal_sales %}<tr><td>{{ row.month }}</td><td>{{ row.count }}</td><td>${{ '%.2f'|format(row.revenue or 0) }}</td></tr>{% endfor %}
+      </table>
+      <div class="pagination-controls"></div>
+    </div>
+  </div>
+  <!-- 13. Sales Channel Analysis -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>13. Sales Channel Analysis</h3>
+      <table><tr><th>Channel</th><th>Sales</th><th>Revenue</th></tr>
+      {% for row in channel_analysis %}<tr><td>{{ row.channel }}</td><td>{{ row.count }}</td><td>${{ '%.2f'|format(row.revenue or 0) }}</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+  <!-- 14. KPIs -->
+  <div class="dashboard-row">
+    <div class="dashboard-card">
+      <h3>14. Key Performance Indicators (KPIs)</h3>
+      <ul>
+          <li>Average Car Price: ${{ '%.2f'|format(avg_price.avg_price or 0) }}</li>
+          <li>Most Common Customer Region: {{ top_region.region if top_region else 'N/A' }}</li>
+          <li>Total Sales: {{ total_sales.total_sales or 0 }}</li>
+      </ul>
+    </div>
+  </div>
+</div>
+<!-- Chart.js scripts at the end for DOM safety -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Tab buttons for section 1
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabSections = {
+      daily: document.getElementById('sales-table-daily'),
+      monthly: document.getElementById('sales-table-monthly'),
+      yearly: document.getElementById('sales-table-yearly')
+    };
+    const chartTitles = {
+      daily: 'Daily Sales/Revenue Chart',
+      monthly: 'Monthly Sales/Revenue Chart',
+      yearly: 'Yearly Sales/Revenue Chart'
+    };
+    const chartCanvases = {
+      daily: document.getElementById('dailySalesChart'),
+      monthly: document.getElementById('monthlySalesChart'),
+      yearly: document.getElementById('yearlySalesChart')
+    };
+    let salesCharts = {};
+    function showChart(tab) {
+      for (const key in chartCanvases) chartCanvases[key].style.display = 'none';
+      chartCanvases[tab].style.display = '';
+      document.getElementById('sales-chart-title').textContent = chartTitles[tab];
+    }
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        for (const key in tabSections) tabSections[key].style.display = 'none';
+        tabSections[this.dataset.tab].style.display = '';
+        showChart(this.dataset.tab);
+      });
+    });
+    // Pagination for all tables
+    function paginateTable(table) {
+      const rows = Array.from(table.querySelectorAll('tr')).slice(1); // skip header
+      let page = 0;
+      const pageSize = 8;
+      const controls = table.parentElement.querySelector('.pagination-controls');
+      function render() {
+        rows.forEach((row, i) => {
+          row.style.display = (i >= page * pageSize && i < (page + 1) * pageSize) ? '' : 'none';
+        });
+        controls.innerHTML = '';
+        if (rows.length > pageSize) {
+          const prev = document.createElement('button');
+          prev.textContent = 'Previous';
+          prev.disabled = page === 0;
+          prev.onclick = () => { page--; render(); };
+          controls.appendChild(prev);
+          controls.appendChild(document.createTextNode(` Page ${page + 1} of ${Math.ceil(rows.length / pageSize)} `));
+          const next = document.createElement('button');
+          next.textContent = 'Next';
+          next.disabled = (page + 1) * pageSize >= rows.length;
+          next.onclick = () => { page++; render(); };
+          controls.appendChild(next);
+        }
+      }
+      render();
+    }
+    document.querySelectorAll('table.paginated-table').forEach(paginateTable);
+    // Chart.js scripts for daily, monthly, yearly
+    const dailyLabels = {{ sales_daily|map(attribute='period')|list|tojson }};
+    const dailySales = {{ sales_daily|map(attribute='count')|list|tojson }};
+    const dailyRevenue = {{ sales_daily|map(attribute='revenue')|list|tojson }};
+    const monthlyLabels = {{ sales_monthly|map(attribute='period')|list|tojson }};
+    const monthlySales = {{ sales_monthly|map(attribute='count')|list|tojson }};
+    const monthlyRevenue = {{ sales_monthly|map(attribute='revenue')|list|tojson }};
+    const yearlyLabels = {{ sales_yearly|map(attribute='period')|list|tojson }};
+    const yearlySales = {{ sales_yearly|map(attribute='count')|list|tojson }};
+    const yearlyRevenue = {{ sales_yearly|map(attribute='revenue')|list|tojson }};
+    function renderSalesChart(ctx, labels, sales, revenue) {
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Sales',
+              data: sales,
+              borderColor: 'blue',
+              backgroundColor: 'rgba(0,0,255,0.1)',
+              fill: false
+            },
+            {
+              label: 'Revenue',
+              data: revenue,
+              borderColor: 'green',
+              backgroundColor: 'rgba(0,255,0,0.1)',
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } }
+        }
+      });
+    }
+    salesCharts.daily = renderSalesChart(document.getElementById('dailySalesChart').getContext('2d'), dailyLabels, dailySales, dailyRevenue);
+    salesCharts.monthly = renderSalesChart(document.getElementById('monthlySalesChart').getContext('2d'), monthlyLabels, monthlySales, monthlyRevenue);
+    salesCharts.yearly = renderSalesChart(document.getElementById('yearlySalesChart').getContext('2d'), yearlyLabels, yearlySales, yearlyRevenue);
+    showChart('daily');
+    // Pie Chart for Sales by Region
+    const regionLabels = {{ sales_by_region|map(attribute='region')|list|tojson }};
+    const regionSales = {{ sales_by_region|map(attribute='num_sales')|list|tojson }};
+    const regionColors = [
+      '#4299e1', '#48bb78', '#f6ad55', '#ed64a6', '#9f7aea', '#f56565', '#38b2ac', '#ecc94b'
+    ];
+    new Chart(document.getElementById('regionPieChart').getContext('2d'), {
+      type: 'pie',
+      data: {
+        labels: regionLabels,
+        datasets: [{
+          data: regionSales,
+          backgroundColor: regionColors.slice(0, regionLabels.length)
+        }]
+      },
+      options: {
+        responsive: false,
+        plugins: { legend: { position: 'bottom' } }
+      }
+    });
+    // Bar Chart for Profit by Brand
+    const profitData = {};
+    {% for row in profit_analysis %}
+      profitData["{{ row.brand }}"] = (profitData["{{ row.brand }}"] || 0) + {{ row.profit|default(0, true) }};
+    {% endfor %}
+    const profitBrands = Object.keys(profitData);
+    const profitTotals = Object.values(profitData);
+    new Chart(document.getElementById('profitBarChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: profitBrands,
+        datasets: [{
+          label: 'Total Profit',
+          data: profitTotals,
+          backgroundColor: '#4299e1'
+        }]
+      },
+      options: {
+        responsive: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+    // Sales by Brand Bar Chart (Section 2)
+    const brandLabels = {{ sales_by_brand|map(attribute='brand')|list|tojson }};
+    const brandSales = {{ sales_by_brand|map(attribute='num_sales')|list|tojson }};
+    new Chart(document.getElementById('brandSalesChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: brandLabels,
+        datasets: [{
+          label: 'Sales by Brand',
+          data: brandSales,
+          backgroundColor: 'rgba(54, 162, 235, 0.5)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+</script>
+<style>
+.dashboard-analytics {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin-top: 32px;
+}
+.dashboard-row {
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.dashboard-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(44,82,130,0.08);
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-x: auto;
+  flex: 1 1 320px;
+  max-width: 100%;
+}
+.dashboard-card h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #2d3e50;
+}
+.dashboard-card table {
+  margin-bottom: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+.tab-buttons {
+  display: flex;
+  gap: 8px;
+}
+.tab-btn {
+  padding: 6px 18px;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  background: #e2e8f0;
+  color: #2d3e50;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.tab-btn.active, .tab-btn:hover {
+  background: #4299e1;
+  color: #fff;
+}
+</style>
+{% endblock %} 

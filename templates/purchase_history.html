@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Purchase History{% endblock %}
+{% block content %}
+<div class="history-page-center">
+  <div class="history-card">
+    <h2 class="history-title">Your Purchase History</h2>
+    {% if purchases %}
+    <table class="history-table">
+        <tr>
+            <th>Date</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>Price</th>
+        </tr>
+        {% for p in purchases %}
+        <tr>
+            <td>{{ p.sale_date }}</td>
+            <td>{{ p.brand }}</td>
+            <td>{{ p.model }}</td>
+            <td>${{ '%.2f'|format(p.sale_price) }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p class="history-empty">You have not purchased any cars yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %} 
