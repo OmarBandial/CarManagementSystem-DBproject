@@ -20,11 +20,9 @@ A web-based car dealership management system built with Flask and SQLite. This p
 
 ## Demo Screenshots
 
-> _Replace these with your own screenshots_
-
-| Home Page | Car Details | Admin Dashboard |
-|-----------|-------------|-----------------|
-| ![Home](static/car_images/toyota.png) | ![Details](static/car_images/bmw.png) | ![Dashboard](images/Logo.png) |
+| Home Page | Cars Inventory | Car Details | Admin Analytics |
+|-----------|---------------|-------------|-----------------|
+| ![Home Page](images/HomePage.png) | ![Cars Inventory](images/CarsInventory.png) | ![Car Details](images/CarDetails.png) | ![Admin Analytics](images/AdminAnalytics.png) |
 
 ## Getting Started
 
@@ -36,7 +34,6 @@ A web-based car dealership management system built with Flask and SQLite. This p
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/yourusername/CarManagementDBProject.git
-   cd CarManagementDBProject
    ```
 2. **Install dependencies:**
    ```bash
